@@ -73,6 +73,7 @@ function WidgetWrapper({ widget, zIndex, startDrag }) {
         left: widget.x,
         top: widget.y,
         width: widget.w,
+        height: widget.h,
         zIndex,
         boxShadow: isSelected ? '0 0 0 2px #4f8cff' : 'none',
       }}

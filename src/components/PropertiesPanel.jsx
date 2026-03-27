@@ -4,6 +4,8 @@ import styles from './PropertiesPanel.module.css';
 const TYPES_WITH_TEXT = [
   'button', 'input', 'textarea', 'checkbox', 'radio',
   'label', 'heading', 'toggle', 'slider', 'card', 'nav',
+  'progressbar', 'spinbox', 'datepicker', 'password',
+  'alert', 'statusbar', 'groupbox', 'badge',
 ];
 
 export default function PropertiesPanel() {
@@ -325,6 +327,228 @@ export default function PropertiesPanel() {
               </option>
             ))}
           </select>
+        </>
+      )}
+
+      {/* Progress bar value */}
+      {widget.type === 'progressbar' && (
+        <>
+          <div className={styles.label}>Value</div>
+          <input
+            type="range"
+            min={0}
+            max={100}
+            className={styles.rangeInput}
+            value={widget.value || 0}
+            onChange={(e) =>
+              update(widget.id, { value: parseInt(e.target.value, 10) })
+            }
+          />
+          <span className={styles.rangeValue}>{widget.value}%</span>
+        </>
+      )}
+
+      {/* SpinBox */}
+      {widget.type === 'spinbox' && (
+        <>
+          <div className={styles.label}>Value</div>
+          <input
+            type="number"
+            className={styles.numInput}
+            value={widget.value ?? 0}
+            onChange={(e) => update(widget.id, { value: parseInt(e.target.value, 10) || 0 })}
+          />
+          <div className={styles.row}>
+            <div className={styles.fieldGroup}>
+              <span className={styles.fieldLabel}>Min</span>
+              <input type="number" className={styles.numInput} value={widget.min ?? 0}
+                onChange={(e) => update(widget.id, { min: parseInt(e.target.value, 10) || 0 })} />
+            </div>
+            <div className={styles.fieldGroup}>
+              <span className={styles.fieldLabel}>Max</span>
+              <input type="number" className={styles.numInput} value={widget.max ?? 100}
+                onChange={(e) => update(widget.id, { max: parseInt(e.target.value, 10) || 100 })} />
+            </div>
+          </div>
+          <div className={styles.label}>Step</div>
+          <input type="number" className={styles.numInput} value={widget.step ?? 1} min={1}
+            onChange={(e) => update(widget.id, { step: parseInt(e.target.value, 10) || 1 })} />
+        </>
+      )}
+
+      {/* DatePicker */}
+      {widget.type === 'datepicker' && (
+        <>
+          <div className={styles.label}>Date</div>
+          <input
+            type="date"
+            className={styles.textInput}
+            value={widget.date || ''}
+            onChange={(e) => update(widget.id, { date: e.target.value })}
+          />
+        </>
+      )}
+
+      {/* Password */}
+      {widget.type === 'password' && (
+        <>
+          <div className={styles.label}>Value</div>
+          <input
+            type="text"
+            className={styles.textInput}
+            value={widget.value || ''}
+            onChange={handleTextChange('value')}
+          />
+        </>
+      )}
+
+      {/* Badge/Alert variant */}
+      {(widget.type === 'badge' || widget.type === 'alert') && (
+        <>
+          <div className={styles.label}>Variant</div>
+          <select
+            className={styles.selectInput}
+            value={widget.variant || 'default'}
+            onChange={(e) => update(widget.id, { variant: e.target.value })}
+          >
+            {widget.type === 'badge' ? (
+              <>
+                <option value="default">Default</option>
+                <option value="success">Success</option>
+                <option value="warning">Warning</option>
+                <option value="error">Error</option>
+              </>
+            ) : (
+              <>
+                <option value="info">Info</option>
+                <option value="success">Success</option>
+                <option value="warning">Warning</option>
+                <option value="error">Error</option>
+              </>
+            )}
+          </select>
+        </>
+      )}
+
+      {/* Avatar initials */}
+      {widget.type === 'avatar' && (
+        <>
+          <div className={styles.label}>Initials</div>
+          <input
+            type="text"
+            className={styles.textInput}
+            value={widget.text || ''}
+            maxLength={3}
+            onChange={handleTextChange('text')}
+          />
+        </>
+      )}
+
+      {/* TabBar tabs */}
+      {widget.type === 'tabbar' && (
+        <>
+          <div className={styles.label}>Tabs</div>
+          {(widget.tabs || []).map((tab, i) => (
+            <div key={i} className={styles.optionRow}>
+              <input type="text" className={styles.textInput} value={tab}
+                onChange={handleOptionChange('tabs', i)} />
+              <button className={styles.removeBtn} onClick={handleRemoveOption('tabs', i)}>{'\u00D7'}</button>
+            </div>
+          ))}
+          <button className={styles.addBtn} onClick={handleAddOption('tabs')}>+ Add tab</button>
+          <div className={styles.label}>Active Tab</div>
+          <select className={styles.selectInput} value={widget.activeTab ?? 0}
+            onChange={(e) => update(widget.id, { activeTab: parseInt(e.target.value, 10) })}>
+            {(widget.tabs || []).map((tab, i) => (
+              <option key={i} value={i}>{tab}</option>
+            ))}
+          </select>
+        </>
+      )}
+
+      {/* MenuBar menus */}
+      {widget.type === 'menubar' && (
+        <>
+          <div className={styles.label}>Menus</div>
+          {(widget.menus || []).map((m, i) => (
+            <div key={i} className={styles.optionRow}>
+              <input type="text" className={styles.textInput} value={m}
+                onChange={handleOptionChange('menus', i)} />
+              <button className={styles.removeBtn} onClick={handleRemoveOption('menus', i)}>{'\u00D7'}</button>
+            </div>
+          ))}
+          <button className={styles.addBtn} onClick={handleAddOption('menus')}>+ Add menu</button>
+        </>
+      )}
+
+      {/* Breadcrumb items */}
+      {widget.type === 'breadcrumb' && (
+        <>
+          <div className={styles.label}>Items</div>
+          {(widget.items || []).map((item, i) => (
+            <div key={i} className={styles.optionRow}>
+              <input type="text" className={styles.textInput} value={item}
+                onChange={handleOptionChange('items', i)} />
+              <button className={styles.removeBtn} onClick={handleRemoveOption('items', i)}>{'\u00D7'}</button>
+            </div>
+          ))}
+          <button className={styles.addBtn} onClick={handleAddOption('items')}>+ Add item</button>
+        </>
+      )}
+
+      {/* StatusBar items */}
+      {widget.type === 'statusbar' && (
+        <>
+          <div className={styles.label}>Items</div>
+          {(widget.items || []).map((item, i) => (
+            <div key={i} className={styles.optionRow}>
+              <input type="text" className={styles.textInput} value={item}
+                onChange={handleOptionChange('items', i)} />
+              <button className={styles.removeBtn} onClick={handleRemoveOption('items', i)}>{'\u00D7'}</button>
+            </div>
+          ))}
+          <button className={styles.addBtn} onClick={handleAddOption('items')}>+ Add item</button>
+        </>
+      )}
+
+      {/* List items */}
+      {widget.type === 'list' && (
+        <>
+          <div className={styles.label}>Items</div>
+          {(widget.items || []).map((item, i) => (
+            <div key={i} className={styles.optionRow}>
+              <input type="text" className={styles.textInput} value={item}
+                onChange={handleOptionChange('items', i)} />
+              <button className={styles.removeBtn} onClick={handleRemoveOption('items', i)}>{'\u00D7'}</button>
+            </div>
+          ))}
+          <button className={styles.addBtn} onClick={handleAddOption('items')}>+ Add item</button>
+          <div className={styles.label}>Selected</div>
+          <select className={styles.selectInput} value={widget.selectedIndex ?? 0}
+            onChange={(e) => update(widget.id, { selectedIndex: parseInt(e.target.value, 10) })}>
+            {(widget.items || []).map((item, i) => (
+              <option key={i} value={i}>{item}</option>
+            ))}
+          </select>
+        </>
+      )}
+
+      {/* Table */}
+      {widget.type === 'table' && (
+        <>
+          <div className={styles.label}>Columns</div>
+          {(widget.columns || []).map((col, i) => (
+            <div key={i} className={styles.optionRow}>
+              <input type="text" className={styles.textInput} value={col}
+                onChange={handleOptionChange('columns', i)} />
+              <button className={styles.removeBtn} onClick={handleRemoveOption('columns', i)}>{'\u00D7'}</button>
+            </div>
+          ))}
+          <button className={styles.addBtn} onClick={handleAddOption('columns')}>+ Add column</button>
+          <div className={styles.label}>Rows</div>
+          <input type="number" className={styles.numInput} min={1} max={20}
+            value={widget.rows ?? 3}
+            onChange={(e) => update(widget.id, { rows: parseInt(e.target.value, 10) || 1 })} />
         </>
       )}
     </div>
