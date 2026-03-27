@@ -1,0 +1,8 @@
+.wireBase {
+  background: #fff;
+  border: 1.5px solid #888;
+  border-radius: 4px;
+  font-family: 'Courier New', monospace;
+  font-size: 13px;
+  color: #333;
+}

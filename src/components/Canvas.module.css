@@ -1,0 +1,34 @@
+.canvas {
+  flex: 1;
+  position: relative;
+  overflow: auto;
+  background: #fff;
+  background-image: radial-gradient(circle, #ddd 1px, transparent 1px);
+  background-size: 20px 20px;
+}
+
+.selectionRect {
+  position: absolute;
+  border: 1.5px dashed #4f8cff;
+  background: rgba(79, 140, 255, 0.08);
+  pointer-events: none;
+  z-index: 9998;
+}
+
+.emptyState {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  color: #bbb;
+  font-size: 14px;
+  text-align: center;
+  pointer-events: none;
+  font-family: 'Courier New', monospace;
+}
+
+.emptyIcon {
+  font-size: 40px;
+  margin-bottom: 12px;
+  opacity: 0.4;
+}

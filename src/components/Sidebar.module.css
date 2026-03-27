@@ -1,0 +1,91 @@
+.sidebar {
+  width: 200px;
+  background: #1d1f27;
+  padding: 14px 10px;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  overflow-y: auto;
+  flex-shrink: 0;
+  font-family: 'Courier New', monospace;
+}
+
+.header {
+  color: #8ab4f8;
+  font-weight: 700;
+  font-size: 13px;
+  padding: 6px 4px;
+  letter-spacing: 1px;
+  text-transform: uppercase;
+  border-bottom: 1px solid #333;
+  margin-bottom: 6px;
+}
+
+.palette {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.paletteItem {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 10px;
+  border-radius: 5px;
+  color: #ccc;
+  font-size: 12px;
+  cursor: grab;
+  background: transparent;
+  transition: background 0.15s;
+}
+
+.paletteItem:hover {
+  background: #2a2d38;
+}
+
+.paletteIcon {
+  font-size: 16px;
+  width: 22px;
+  text-align: center;
+  opacity: 0.7;
+}
+
+.actions {
+  margin-top: auto;
+  padding-top: 12px;
+  border-top: 1px solid #333;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.actionBtn {
+  background: #2a2d38;
+  color: #8ab4f8;
+  border: 1px solid #444;
+  border-radius: 4px;
+  padding: 7px 0;
+  font-size: 12px;
+  cursor: pointer;
+  font-family: inherit;
+}
+
+.actionBtn:hover {
+  background: #353849;
+}
+
+.deleteBtn {
+  background: #3a1c1c;
+  color: #ff8a8a;
+  border: 1px solid #5a2a2a;
+  border-radius: 4px;
+  padding: 7px 0;
+  font-size: 12px;
+  cursor: pointer;
+  font-family: inherit;
+}
+
+.deleteBtn:hover {
+  background: #4a2222;
+}

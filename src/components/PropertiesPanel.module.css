@@ -1,0 +1,187 @@
+.panel {
+  width: 240px;
+  background: #1d1f27;
+  padding: 14px 12px;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  overflow-y: auto;
+  flex-shrink: 0;
+  font-family: 'Courier New', monospace;
+  border-left: 1px solid #333;
+}
+
+.sectionHeader {
+  color: #8ab4f8;
+  font-weight: 700;
+  font-size: 13px;
+  padding: 4px 0;
+  letter-spacing: 1px;
+  text-transform: uppercase;
+  border-bottom: 1px solid #333;
+  margin-bottom: 4px;
+}
+
+.typeLabel {
+  color: #666;
+  font-size: 11px;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  margin-bottom: 6px;
+}
+
+.multiInfo {
+  color: #888;
+  font-size: 12px;
+  padding: 8px 0;
+}
+
+.label {
+  color: #888;
+  font-size: 11px;
+  margin-top: 6px;
+  margin-bottom: 2px;
+}
+
+.row {
+  display: flex;
+  gap: 8px;
+}
+
+.fieldGroup {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  flex: 1;
+}
+
+.fieldLabel {
+  color: #666;
+  font-size: 10px;
+  min-width: 14px;
+}
+
+.numInput {
+  width: 100%;
+  background: #2a2d38;
+  border: 1px solid #444;
+  border-radius: 3px;
+  color: #ccc;
+  font-family: inherit;
+  font-size: 12px;
+  padding: 4px 6px;
+  outline: none;
+}
+
+.numInput:focus {
+  border-color: #8ab4f8;
+}
+
+.textInput {
+  width: 100%;
+  background: #2a2d38;
+  border: 1px solid #444;
+  border-radius: 3px;
+  color: #ccc;
+  font-family: inherit;
+  font-size: 12px;
+  padding: 5px 8px;
+  outline: none;
+  box-sizing: border-box;
+}
+
+.textInput:focus {
+  border-color: #8ab4f8;
+}
+
+.textareaInput {
+  width: 100%;
+  background: #2a2d38;
+  border: 1px solid #444;
+  border-radius: 3px;
+  color: #ccc;
+  font-family: inherit;
+  font-size: 12px;
+  padding: 5px 8px;
+  outline: none;
+  resize: vertical;
+  box-sizing: border-box;
+}
+
+.textareaInput:focus {
+  border-color: #8ab4f8;
+}
+
+.selectInput {
+  width: 100%;
+  background: #2a2d38;
+  border: 1px solid #444;
+  border-radius: 3px;
+  color: #ccc;
+  font-family: inherit;
+  font-size: 12px;
+  padding: 5px 6px;
+  outline: none;
+}
+
+.selectInput:focus {
+  border-color: #8ab4f8;
+}
+
+.toggleRow {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  color: #ccc;
+  font-size: 12px;
+  cursor: pointer;
+}
+
+.rangeInput {
+  width: 100%;
+  accent-color: #4f8cff;
+}
+
+.rangeValue {
+  color: #888;
+  font-size: 11px;
+}
+
+.optionRow {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  margin-bottom: 4px;
+}
+
+.removeBtn {
+  background: none;
+  border: 1px solid #444;
+  border-radius: 3px;
+  color: #ff8a8a;
+  font-size: 14px;
+  cursor: pointer;
+  padding: 2px 6px;
+  line-height: 1;
+  flex-shrink: 0;
+}
+
+.removeBtn:hover {
+  background: #3a1c1c;
+}
+
+.addBtn {
+  background: #2a2d38;
+  border: 1px solid #444;
+  border-radius: 3px;
+  color: #8ab4f8;
+  font-size: 11px;
+  cursor: pointer;
+  padding: 4px 8px;
+  font-family: inherit;
+  margin-top: 2px;
+}
+
+.addBtn:hover {
+  background: #353849;
+}

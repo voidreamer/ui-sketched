@@ -1,0 +1,17 @@
+.wrapper {
+  position: absolute;
+  cursor: grab;
+  user-select: none;
+}
+
+.resizeHandle {
+  position: absolute;
+  right: -6px;
+  bottom: -6px;
+  width: 12px;
+  height: 12px;
+  cursor: nwse-resize;
+  background: #4f8cff;
+  border-radius: 2px;
+  z-index: 999;
+}

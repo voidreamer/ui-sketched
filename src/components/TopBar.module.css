@@ -1,0 +1,134 @@
+.topBar {
+  height: 42px;
+  background: #1d1f27;
+  display: flex;
+  align-items: center;
+  padding: 0 16px;
+  gap: 12px;
+  border-bottom: 1px solid #333;
+  flex-shrink: 0;
+  font-family: 'Courier New', monospace;
+}
+
+.brand {
+  color: #8ab4f8;
+  font-weight: 700;
+  font-size: 14px;
+  letter-spacing: 0.5px;
+}
+
+.separator {
+  color: #555;
+  font-size: 12px;
+}
+
+.hint {
+  color: #777;
+  font-size: 11px;
+}
+
+.spacer {
+  flex: 1;
+}
+
+.btn {
+  background: #2a2d38;
+  color: #8ab4f8;
+  border: 1px solid #444;
+  border-radius: 4px;
+  padding: 4px 10px;
+  font-size: 11px;
+  cursor: pointer;
+  font-family: inherit;
+  transition: background 0.15s;
+}
+
+.btn:hover:not(:disabled) {
+  background: #353849;
+}
+
+.btn:disabled {
+  opacity: 0.4;
+  cursor: default;
+}
+
+.count {
+  color: #555;
+  font-size: 11px;
+}
+
+.menuWrap {
+  position: relative;
+}
+
+.menu {
+  position: absolute;
+  top: 100%;
+  right: 0;
+  margin-top: 4px;
+  background: #1d1f27;
+  border: 1px solid #444;
+  border-radius: 4px;
+  min-width: 160px;
+  z-index: 1000;
+  padding: 4px 0;
+  font-family: 'Courier New', monospace;
+}
+
+.menuItem {
+  display: block;
+  width: 100%;
+  padding: 6px 12px;
+  background: none;
+  border: none;
+  color: #ccc;
+  font-size: 11px;
+  font-family: inherit;
+  cursor: pointer;
+  text-align: left;
+}
+
+.menuItem:hover {
+  background: #2a2d38;
+  color: #8ab4f8;
+}
+
+.menuSep {
+  height: 1px;
+  background: #333;
+  margin: 4px 0;
+}
+
+.s3Input {
+  background: #2a2d38;
+  border: 1px solid #444;
+  border-radius: 3px;
+  color: #ccc;
+  font-size: 11px;
+  font-family: inherit;
+  padding: 4px 8px;
+  width: 130px;
+  outline: none;
+}
+
+.s3Input:focus {
+  border-color: #8ab4f8;
+}
+
+.s3Row {
+  display: flex;
+  gap: 4px;
+  padding: 4px 8px;
+  align-items: center;
+}
+
+.s3List {
+  max-height: 120px;
+  overflow-y: auto;
+}
+
+.statusMsg {
+  color: #8ab4f8;
+  font-size: 10px;
+  padding: 0 4px;
+}

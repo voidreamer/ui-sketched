@@ -38,9 +38,21 @@ resource "aws_s3_bucket" "frontend" {
 resource "aws_s3_bucket_public_access_block" "frontend" {
   bucket                  = aws_s3_bucket.frontend.id
   block_public_acls       = true
-  block_public_policy     = true
+  block_public_policy     = false
   ignore_public_acls      = true
-  restrict_public_buckets = true
+  restrict_public_buckets = false
+}
+
+resource "aws_s3_bucket_cors_configuration" "frontend" {
+  bucket = aws_s3_bucket.frontend.id
+
+  cors_rule {
+    allowed_headers = ["*"]
+    allowed_methods = ["GET", "PUT", "HEAD"]
+    allowed_origins = ["*"]
+    expose_headers  = ["ETag"]
+    max_age_seconds = 3600
+  }
 }
 
 # --- CloudFront OAC ---
@@ -126,6 +138,25 @@ resource "aws_s3_bucket_policy" "frontend" {
         Condition = {
           StringEquals = {
             "AWS:SourceArn" = aws_cloudfront_distribution.frontend.arn
+          }
+        }
+      },
+      {
+        Sid       = "PublicSketchesRead"
+        Effect    = "Allow"
+        Principal = "*"
+        Action    = ["s3:GetObject", "s3:PutObject"]
+        Resource  = "${aws_s3_bucket.frontend.arn}/sketches/*"
+      },
+      {
+        Sid       = "PublicSketchesList"
+        Effect    = "Allow"
+        Principal = "*"
+        Action    = "s3:ListBucket"
+        Resource  = aws_s3_bucket.frontend.arn
+        Condition = {
+          StringLike = {
+            "s3:prefix" = ["sketches/*"]
           }
         }
       }

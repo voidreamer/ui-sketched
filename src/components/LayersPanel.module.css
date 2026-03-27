@@ -1,0 +1,103 @@
+.panel {
+  margin-top: 8px;
+  border-top: 1px solid #333;
+  padding-top: 4px;
+}
+
+.header {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  color: #8ab4f8;
+  font-weight: 700;
+  font-size: 12px;
+  padding: 6px 4px;
+  cursor: pointer;
+  user-select: none;
+  letter-spacing: 0.5px;
+  text-transform: uppercase;
+}
+
+.header:hover {
+  color: #a8c8ff;
+}
+
+.arrow {
+  font-size: 9px;
+  width: 12px;
+  display: inline-block;
+}
+
+.list {
+  display: flex;
+  flex-direction: column;
+  gap: 1px;
+  max-height: 220px;
+  overflow-y: auto;
+}
+
+.empty {
+  color: #555;
+  font-size: 11px;
+  padding: 6px 8px;
+}
+
+.row {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 4px 6px;
+  border-radius: 3px;
+  cursor: pointer;
+  font-size: 11px;
+  color: #aaa;
+  transition: background 0.1s;
+}
+
+.row:hover {
+  background: #2a2d38;
+}
+
+.rowSelected {
+  background: #2a2d38;
+  color: #8ab4f8;
+}
+
+.icon {
+  font-size: 12px;
+  width: 18px;
+  text-align: center;
+  opacity: 0.7;
+  flex-shrink: 0;
+}
+
+.name {
+  flex: 1;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.layerControls {
+  display: flex;
+  gap: 2px;
+  flex-shrink: 0;
+}
+
+.layerBtn {
+  background: none;
+  border: 1px solid transparent;
+  color: #666;
+  font-size: 11px;
+  cursor: pointer;
+  padding: 1px 4px;
+  border-radius: 2px;
+  line-height: 1;
+  font-family: inherit;
+}
+
+.layerBtn:hover {
+  color: #8ab4f8;
+  border-color: #444;
+  background: #1d1f27;
+}
