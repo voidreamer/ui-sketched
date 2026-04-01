@@ -34,6 +34,10 @@ export const PALETTE = [
   { type: 'groupbox', label: 'Group Box', icon: '⊞' },
   { type: 'list', label: 'List', icon: '☷' },
   { type: 'table', label: 'Table', icon: '⊞' },
+  // Pro Widgets
+  { type: 'treeview', label: 'Tree View', icon: '\u251C' },
+  { type: 'propertygrid', label: 'Property Grid', icon: '\u2699' },
+  { type: 'toolbar', label: 'Toolbar', icon: '\u{1F527}' },
 ];
 
 export function createWidget(type, x, y) {
@@ -94,7 +98,83 @@ export function createWidget(type, x, y) {
     case 'list':
       return { ...base, w: 200, h: 160, items: ['Item 1', 'Item 2', 'Item 3', 'Item 4'], selectedIndex: 0 };
     case 'table':
-      return { ...base, w: 360, h: 140, columns: ['Name', 'Value', 'Status'], rows: 3 };
+      return { ...base, w: 360, h: 180, columns: ['Name', 'Value', 'Status'], rows: 4, data: null, selectedRow: null, sortColumn: null, sortDir: 'asc', alternateRows: true };
+    case 'treeview':
+      return {
+        ...base, w: 340, h: 260,
+        columns: ['Name', 'Value', 'Type'],
+        showCheckboxes: false,
+        selectedPath: null,
+        nodes: [
+          {
+            label: 'Application', expanded: true, values: ['v1.0', 'Root'],
+            children: [
+              {
+                label: 'Components', expanded: true, values: ['', 'Group'],
+                children: [
+                  { label: 'Header', values: ['active', 'Widget'], children: [] },
+                  { label: 'Sidebar', values: ['active', 'Widget'], children: [] },
+                  { label: 'Footer', values: ['hidden', 'Widget'], children: [] },
+                ],
+              },
+              {
+                label: 'Settings', expanded: false, values: ['', 'Group'],
+                children: [
+                  { label: 'Theme', values: ['dark', 'String'], children: [] },
+                  { label: 'Language', values: ['en', 'String'], children: [] },
+                ],
+              },
+            ],
+          },
+        ],
+      };
+    case 'propertygrid':
+      return {
+        ...base, w: 280, h: 300,
+        groups: [
+          {
+            label: 'Appearance', expanded: true,
+            properties: [
+              { key: 'Background', value: '#ffffff', kind: 'color' },
+              { key: 'Font Size', value: '14px', kind: 'text' },
+              { key: 'Visible', value: 'true', kind: 'bool' },
+              { key: 'Opacity', value: '100%', kind: 'text' },
+            ],
+          },
+          {
+            label: 'Layout', expanded: true,
+            properties: [
+              { key: 'Width', value: '200', kind: 'text' },
+              { key: 'Height', value: '100', kind: 'text' },
+              { key: 'Alignment', value: 'Center', kind: 'text' },
+            ],
+          },
+          {
+            label: 'Behavior', expanded: false,
+            properties: [
+              { key: 'Enabled', value: 'true', kind: 'bool' },
+              { key: 'Read Only', value: 'false', kind: 'bool' },
+            ],
+          },
+        ],
+      };
+    case 'toolbar':
+      return {
+        ...base, w: 400, h: 44,
+        showLabels: true,
+        items: [
+          { label: 'New', icon: '+' },
+          { label: 'Open', icon: '\u{1F4C2}' },
+          { label: 'Save', icon: '\u{1F4BE}' },
+          { kind: 'separator' },
+          { label: 'Cut', icon: '\u2702' },
+          { label: 'Copy', icon: '\u{1F4CB}' },
+          { label: 'Paste', icon: '\u{1F4CB}' },
+          { kind: 'separator' },
+          { label: 'Undo', icon: '\u21A9' },
+          { label: 'Redo', icon: '\u21AA' },
+        ],
+      };
     default:
       return { ...base, w: 100, h: 40, text: type };
   }

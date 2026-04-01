@@ -1,5 +1,10 @@
+import { useState } from 'react';
 import { useCanvas } from '../state/CanvasContext';
 import styles from './PropertiesPanel.module.css';
+import { serializeTree, deserializeTree, addChildAtPath, removeAtPath } from '../widgets/TreeViewWidget';
+import { serializePropertyGrid, deserializePropertyGrid } from '../widgets/PropertyGridWidget';
+import { serializeToolbar, deserializeToolbar } from '../widgets/ToolbarWidget';
+import { serializeTableData, deserializeTableData } from '../widgets/TableWidget';
 
 const TYPES_WITH_TEXT = [
   'button', 'input', 'textarea', 'checkbox', 'radio',
@@ -535,22 +540,251 @@ export default function PropertiesPanel() {
 
       {/* Table */}
       {widget.type === 'table' && (
-        <>
-          <div className={styles.label}>Columns</div>
-          {(widget.columns || []).map((col, i) => (
-            <div key={i} className={styles.optionRow}>
-              <input type="text" className={styles.textInput} value={col}
-                onChange={handleOptionChange('columns', i)} />
-              <button className={styles.removeBtn} onClick={handleRemoveOption('columns', i)}>{'\u00D7'}</button>
-            </div>
-          ))}
-          <button className={styles.addBtn} onClick={handleAddOption('columns')}>+ Add column</button>
-          <div className={styles.label}>Rows</div>
-          <input type="number" className={styles.numInput} min={1} max={20}
-            value={widget.rows ?? 3}
-            onChange={(e) => update(widget.id, { rows: parseInt(e.target.value, 10) || 1 })} />
-        </>
+        <TableProperties widget={widget} update={update} handleOptionChange={handleOptionChange} handleRemoveOption={handleRemoveOption} handleAddOption={handleAddOption} />
+      )}
+
+      {/* TreeView */}
+      {widget.type === 'treeview' && (
+        <TreeViewProperties widget={widget} update={update} handleOptionChange={handleOptionChange} handleRemoveOption={handleRemoveOption} handleAddOption={handleAddOption} />
+      )}
+
+      {/* PropertyGrid */}
+      {widget.type === 'propertygrid' && (
+        <PropertyGridProperties widget={widget} update={update} />
+      )}
+
+      {/* Toolbar */}
+      {widget.type === 'toolbar' && (
+        <ToolbarProperties widget={widget} update={update} />
       )}
     </div>
+  );
+}
+
+function TableProperties({ widget, update, handleOptionChange, handleRemoveOption, handleAddOption }) {
+  const [editingData, setEditingData] = useState(false);
+  const [dataText, setDataText] = useState('');
+
+  const startEditData = () => {
+    const columns = widget.columns || [];
+    const rows = widget.rows ?? 3;
+    const data = widget.data || Array.from({ length: rows }, (_, ri) =>
+      columns.map((_, ci) => ci === 0 ? `Item ${ri + 1}` : ci === 1 ? `${(ri + 1) * 100}` : ri % 3 === 0 ? 'Active' : ri % 3 === 1 ? 'Pending' : 'Done')
+    );
+    setDataText(serializeTableData(data));
+    setEditingData(true);
+  };
+
+  const applyData = () => {
+    const columns = widget.columns || [];
+    const newData = deserializeTableData(dataText, columns.length);
+    update(widget.id, { data: newData, rows: newData.length });
+    setEditingData(false);
+  };
+
+  return (
+    <>
+      <div className={styles.label}>Columns</div>
+      {(widget.columns || []).map((col, i) => (
+        <div key={i} className={styles.optionRow}>
+          <input type="text" className={styles.textInput} value={col}
+            onChange={handleOptionChange('columns', i)} />
+          <button className={styles.removeBtn} onClick={handleRemoveOption('columns', i)}>{'\u00D7'}</button>
+        </div>
+      ))}
+      <button className={styles.addBtn} onClick={handleAddOption('columns')}>+ Add column</button>
+      <div className={styles.label}>Rows</div>
+      <input type="number" className={styles.numInput} min={1} max={50}
+        value={widget.rows ?? 3}
+        onChange={(e) => update(widget.id, { rows: parseInt(e.target.value, 10) || 1 })} />
+
+      <div className={styles.label}>Alternate Rows</div>
+      <label className={styles.toggleRow}>
+        <input type="checkbox" checked={widget.alternateRows !== false}
+          onChange={(e) => update(widget.id, { alternateRows: e.target.checked })} />
+        <span>{widget.alternateRows !== false ? 'On' : 'Off'}</span>
+      </label>
+
+      <div className={styles.label}>Cell Data</div>
+      {editingData ? (
+        <>
+          <textarea className={styles.textareaInput} rows={6} value={dataText}
+            onChange={(e) => setDataText(e.target.value)}
+            placeholder="Tab-separated values, one row per line" />
+          <div className={styles.row}>
+            <button className={styles.addBtn} onClick={applyData}>Apply</button>
+            <button className={styles.addBtn} onClick={() => setEditingData(false)} style={{ color: '#888' }}>Cancel</button>
+          </div>
+        </>
+      ) : (
+        <button className={styles.addBtn} onClick={startEditData}>
+          {widget.data ? 'Edit Data' : 'Set Data'}
+        </button>
+      )}
+    </>
+  );
+}
+
+function TreeViewProperties({ widget, update, handleOptionChange, handleRemoveOption, handleAddOption }) {
+  const [editingTree, setEditingTree] = useState(false);
+  const [treeText, setTreeText] = useState('');
+  const nodes = widget.nodes || [];
+  const columns = widget.columns || ['Name'];
+
+  const startEditTree = () => {
+    setTreeText(serializeTree(nodes, columns));
+    setEditingTree(true);
+  };
+
+  const applyTree = () => {
+    const extraCols = (columns.length > 1) ? columns.length - 1 : 0;
+    const newNodes = deserializeTree(treeText, extraCols);
+    update(widget.id, { nodes: newNodes });
+    setEditingTree(false);
+  };
+
+  return (
+    <>
+      <div className={styles.label}>Columns</div>
+      {(widget.columns || []).map((col, i) => (
+        <div key={i} className={styles.optionRow}>
+          <input type="text" className={styles.textInput} value={col}
+            onChange={handleOptionChange('columns', i)} />
+          {i > 0 && (
+            <button className={styles.removeBtn} onClick={handleRemoveOption('columns', i)}>{'\u00D7'}</button>
+          )}
+        </div>
+      ))}
+      <button className={styles.addBtn} onClick={handleAddOption('columns')}>+ Add column</button>
+
+      <div className={styles.label}>Checkboxes</div>
+      <label className={styles.toggleRow}>
+        <input type="checkbox" checked={!!widget.showCheckboxes}
+          onChange={(e) => update(widget.id, { showCheckboxes: e.target.checked })} />
+        <span>{widget.showCheckboxes ? 'On' : 'Off'}</span>
+      </label>
+
+      <div className={styles.label}>Tree Nodes</div>
+      <div className={styles.row}>
+        <button className={styles.addBtn} onClick={() => update(widget.id, { nodes: addChildAtPath(nodes, null) })}>
+          + Root
+        </button>
+        {widget.selectedPath && (
+          <>
+            <button className={styles.addBtn} onClick={() => update(widget.id, { nodes: addChildAtPath(nodes, widget.selectedPath) })}>
+              + Child
+            </button>
+            <button className={styles.removeBtn} onClick={() => update(widget.id, { nodes: removeAtPath(nodes, widget.selectedPath), selectedPath: null })}>
+              {'\u00D7'}
+            </button>
+          </>
+        )}
+      </div>
+
+      <div className={styles.label}>Edit Tree Data</div>
+      {editingTree ? (
+        <>
+          <textarea className={styles.textareaInput} rows={10} value={treeText}
+            onChange={(e) => setTreeText(e.target.value)}
+            placeholder={'Indent with 2 spaces\nUse | for columns'} style={{ fontSize: 10 }} />
+          <div className={styles.row}>
+            <button className={styles.addBtn} onClick={applyTree}>Apply</button>
+            <button className={styles.addBtn} onClick={() => setEditingTree(false)} style={{ color: '#888' }}>Cancel</button>
+          </div>
+        </>
+      ) : (
+        <button className={styles.addBtn} onClick={startEditTree}>Edit as text</button>
+      )}
+    </>
+  );
+}
+
+function PropertyGridProperties({ widget, update }) {
+  const [editing, setEditing] = useState(false);
+  const [text, setText] = useState('');
+  const groups = widget.groups || [];
+
+  const startEdit = () => {
+    setText(serializePropertyGrid(groups));
+    setEditing(true);
+  };
+
+  const apply = () => {
+    const newGroups = deserializePropertyGrid(text);
+    update(widget.id, { groups: newGroups });
+    setEditing(false);
+  };
+
+  return (
+    <>
+      <div className={styles.label}>Property Groups</div>
+      {editing ? (
+        <>
+          <textarea className={styles.textareaInput} rows={12} value={text}
+            onChange={(e) => setText(e.target.value)}
+            placeholder={'[Group Name]\nKey = Value\nColor = #fff (color)\nFlag = true (bool)'}
+            style={{ fontSize: 10 }} />
+          <div className={styles.row}>
+            <button className={styles.addBtn} onClick={apply}>Apply</button>
+            <button className={styles.addBtn} onClick={() => setEditing(false)} style={{ color: '#888' }}>Cancel</button>
+          </div>
+        </>
+      ) : (
+        <>
+          <div style={{ fontSize: 11, color: '#888', marginBottom: 4 }}>
+            {groups.length} group{groups.length !== 1 ? 's' : ''}, {groups.reduce((s, g) => s + (g.properties || []).length, 0)} properties
+          </div>
+          <button className={styles.addBtn} onClick={startEdit}>Edit properties</button>
+        </>
+      )}
+    </>
+  );
+}
+
+function ToolbarProperties({ widget, update }) {
+  const [editing, setEditing] = useState(false);
+  const [text, setText] = useState('');
+  const items = widget.items || [];
+
+  const startEdit = () => {
+    setText(serializeToolbar(items));
+    setEditing(true);
+  };
+
+  const apply = () => {
+    const newItems = deserializeToolbar(text);
+    update(widget.id, { items: newItems });
+    setEditing(false);
+  };
+
+  return (
+    <>
+      <div className={styles.label}>Show Labels</div>
+      <label className={styles.toggleRow}>
+        <input type="checkbox" checked={widget.showLabels !== false}
+          onChange={(e) => update(widget.id, { showLabels: e.target.checked })} />
+        <span>{widget.showLabels !== false ? 'On' : 'Off'}</span>
+      </label>
+
+      <div className={styles.label}>Items</div>
+      {editing ? (
+        <>
+          <textarea className={styles.textareaInput} rows={8} value={text}
+            onChange={(e) => setText(e.target.value)}
+            placeholder={'icon Label\n---  (separator)\nicon Label'} style={{ fontSize: 10 }} />
+          <div className={styles.row}>
+            <button className={styles.addBtn} onClick={apply}>Apply</button>
+            <button className={styles.addBtn} onClick={() => setEditing(false)} style={{ color: '#888' }}>Cancel</button>
+          </div>
+        </>
+      ) : (
+        <>
+          <div style={{ fontSize: 11, color: '#888', marginBottom: 4 }}>
+            {items.filter((i) => i.kind !== 'separator').length} buttons, {items.filter((i) => i.kind === 'separator').length} separators
+          </div>
+          <button className={styles.addBtn} onClick={startEdit}>Edit items</button>
+        </>
+      )}
+    </>
   );
 }

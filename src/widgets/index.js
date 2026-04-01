@@ -26,6 +26,9 @@ import CardWidget from './CardWidget';
 import GroupBoxWidget from './GroupBoxWidget';
 import ListWidget from './ListWidget';
 import TableWidget from './TableWidget';
+import TreeViewWidget from './TreeViewWidget';
+import PropertyGridWidget from './PropertyGridWidget';
+import ToolbarWidget from './ToolbarWidget';
 
 export const widgetRegistry = {
   button: ButtonWidget,
@@ -56,4 +59,7 @@ export const widgetRegistry = {
   groupbox: GroupBoxWidget,
   list: ListWidget,
   table: TableWidget,
+  treeview: TreeViewWidget,
+  propertygrid: PropertyGridWidget,
+  toolbar: ToolbarWidget,
 };
