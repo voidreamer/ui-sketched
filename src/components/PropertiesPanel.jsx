@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { useCanvas } from '../state/CanvasContext';
 import styles from './PropertiesPanel.module.css';
-import { serializeTree, deserializeTree, addChildAtPath, removeAtPath } from '../widgets/TreeViewWidget';
+import { serializeTree, deserializeTree, addChildAtPath, removeAtPath, updateAtPath, getNodeAtPath } from '../widgets/TreeViewWidget';
 import { serializePropertyGrid, deserializePropertyGrid } from '../widgets/PropertyGridWidget';
 import { serializeToolbar, deserializeToolbar } from '../widgets/ToolbarWidget';
 import { serializeTableData, deserializeTableData } from '../widgets/TableWidget';
@@ -233,6 +233,28 @@ export default function PropertiesPanel() {
           >
             + Add option
           </button>
+
+          {/* Widget linking */}
+          <div className={styles.label} style={{ marginTop: 8 }}>Link to widget</div>
+          <select
+            className={styles.selectInput}
+            value={widget.linkTo || ''}
+            onChange={(e) => update(widget.id, { linkTo: e.target.value || null })}
+          >
+            <option value="">None</option>
+            {state.widgets
+              .filter((w) => w.id !== widget.id && (w.type === 'treeview' || w.type === 'table' || w.type === 'list'))
+              .map((w) => (
+                <option key={w.id} value={w.id}>
+                  {w.type} ({w.id})
+                </option>
+              ))}
+          </select>
+          {widget.linkTo && (
+            <div style={{ fontSize: 10, color: '#888', marginTop: 2 }}>
+              Selecting an option will switch the linked widget's dataset.
+            </div>
+          )}
         </>
       )}
 
@@ -545,7 +567,7 @@ export default function PropertiesPanel() {
 
       {/* TreeView */}
       {widget.type === 'treeview' && (
-        <TreeViewProperties widget={widget} update={update} handleOptionChange={handleOptionChange} handleRemoveOption={handleRemoveOption} handleAddOption={handleAddOption} />
+        <TreeViewProperties widget={widget} update={update} handleOptionChange={handleOptionChange} handleRemoveOption={handleRemoveOption} handleAddOption={handleAddOption} allWidgets={state.widgets} />
       )}
 
       {/* PropertyGrid */}
@@ -625,11 +647,12 @@ function TableProperties({ widget, update, handleOptionChange, handleRemoveOptio
   );
 }
 
-function TreeViewProperties({ widget, update, handleOptionChange, handleRemoveOption, handleAddOption }) {
+function TreeViewProperties({ widget, update, handleOptionChange, handleRemoveOption, handleAddOption, allWidgets }) {
   const [editingTree, setEditingTree] = useState(false);
   const [treeText, setTreeText] = useState('');
   const nodes = widget.nodes || [];
   const columns = widget.columns || ['Name'];
+  const selectedNode = getNodeAtPath(nodes, widget.selectedPath);
 
   const startEditTree = () => {
     setTreeText(serializeTree(nodes, columns));
@@ -637,15 +660,80 @@ function TreeViewProperties({ widget, update, handleOptionChange, handleRemoveOp
   };
 
   const applyTree = () => {
-    const extraCols = (columns.length > 1) ? columns.length - 1 : 0;
-    const newNodes = deserializeTree(treeText, extraCols);
+    const newNodes = deserializeTree(treeText, columns.length - 1);
     update(widget.id, { nodes: newNodes });
     setEditingTree(false);
   };
 
+  const updateSelectedNode = (field, value) => {
+    if (!widget.selectedPath) return;
+    const newNodes = updateAtPath(nodes, widget.selectedPath, (n) => ({ ...n, [field]: value }));
+    update(widget.id, { nodes: newNodes });
+  };
+
+  const updateSelectedNodeValue = (colIndex, value) => {
+    if (!widget.selectedPath) return;
+    const newNodes = updateAtPath(nodes, widget.selectedPath, (n) => {
+      const vals = [...(n.values || [])];
+      while (vals.length <= colIndex) vals.push('');
+      vals[colIndex] = value;
+      return { ...n, values: vals };
+    });
+    update(widget.id, { nodes: newNodes });
+  };
+
+  // Check if any combobox is linked to this treeview
+  const linkedCombobox = (allWidgets || []).find(
+    (w) => w.type === 'combobox' && w.linkTo === widget.id
+  );
+
   return (
     <>
-      <div className={styles.label}>Columns</div>
+      {/* Selected node editing */}
+      {selectedNode && (
+        <>
+          <div className={styles.label}>Selected Node</div>
+          <div className={styles.optionRow}>
+            <input
+              type="text"
+              className={styles.textInput}
+              value={selectedNode.label}
+              onChange={(e) => updateSelectedNode('label', e.target.value)}
+              placeholder="Node label"
+            />
+          </div>
+          {columns.slice(1).map((col, ci) => (
+            <div key={ci}>
+              <div className={styles.label} style={{ fontSize: 10 }}>{col}</div>
+              <input
+                type="text"
+                className={styles.textInput}
+                value={(selectedNode.values || [])[ci] || ''}
+                onChange={(e) => updateSelectedNodeValue(ci, e.target.value)}
+              />
+            </div>
+          ))}
+          <div className={styles.row} style={{ marginTop: 4 }}>
+            <button className={styles.addBtn} onClick={() => update(widget.id, { nodes: addChildAtPath(nodes, widget.selectedPath) })}>
+              + Child
+            </button>
+            <button className={styles.removeBtn} onClick={() => update(widget.id, { nodes: removeAtPath(nodes, widget.selectedPath), selectedPath: null })}>
+              {'\u00D7'} Remove
+            </button>
+          </div>
+        </>
+      )}
+      {!selectedNode && (
+        <div style={{ fontSize: 11, color: '#666', margin: '4px 0' }}>
+          Click a node in the tree to edit it
+        </div>
+      )}
+
+      <button className={styles.addBtn} onClick={() => update(widget.id, { nodes: addChildAtPath(nodes, null) })} style={{ marginTop: 4 }}>
+        + Add root node
+      </button>
+
+      <div className={styles.label} style={{ marginTop: 8 }}>Columns</div>
       {(widget.columns || []).map((col, i) => (
         <div key={i} className={styles.optionRow}>
           <input type="text" className={styles.textInput} value={col}
@@ -664,24 +752,57 @@ function TreeViewProperties({ widget, update, handleOptionChange, handleRemoveOp
         <span>{widget.showCheckboxes ? 'On' : 'Off'}</span>
       </label>
 
-      <div className={styles.label}>Tree Nodes</div>
-      <div className={styles.row}>
-        <button className={styles.addBtn} onClick={() => update(widget.id, { nodes: addChildAtPath(nodes, null) })}>
-          + Root
-        </button>
-        {widget.selectedPath && (
-          <>
-            <button className={styles.addBtn} onClick={() => update(widget.id, { nodes: addChildAtPath(nodes, widget.selectedPath) })}>
-              + Child
-            </button>
-            <button className={styles.removeBtn} onClick={() => update(widget.id, { nodes: removeAtPath(nodes, widget.selectedPath), selectedPath: null })}>
-              {'\u00D7'}
-            </button>
-          </>
-        )}
-      </div>
+      {/* Data Sets (for linking) */}
+      {linkedCombobox && (
+        <>
+          <div className={styles.label} style={{ marginTop: 8 }}>Data Sets</div>
+          <div style={{ fontSize: 10, color: '#888', marginBottom: 4 }}>
+            Linked to: {linkedCombobox.text || linkedCombobox.type}
+          </div>
+          <div style={{ fontSize: 10, color: '#666', marginBottom: 2 }}>
+            Active: {widget.activeDataSet || '(default)'}
+          </div>
+          {(linkedCombobox.options || []).map((opt) => {
+            const isActive = widget.activeDataSet === opt;
+            const hasData = widget.dataSets && widget.dataSets[opt];
+            return (
+              <div key={opt} className={styles.optionRow}>
+                <span style={{ flex: 1, fontSize: 11, color: isActive ? '#8ab4f8' : '#ccc' }}>
+                  {opt} {hasData ? '' : '(empty)'}
+                </span>
+                <button
+                  className={styles.addBtn}
+                  style={{ fontSize: 10, padding: '2px 6px' }}
+                  onClick={() => {
+                    // Save current nodes as this dataset, then switch
+                    const dataSets = { ...(widget.dataSets || {}) };
+                    // Save current state to the current active dataset
+                    if (widget.activeDataSet) {
+                      dataSets[widget.activeDataSet] = nodes;
+                    }
+                    // If this dataset doesn't exist yet, clone current nodes
+                    if (!dataSets[opt]) {
+                      dataSets[opt] = JSON.parse(JSON.stringify(nodes));
+                    }
+                    update(widget.id, {
+                      dataSets,
+                      activeDataSet: opt,
+                      nodes: dataSets[opt],
+                    });
+                  }}
+                >
+                  {isActive ? 'editing' : 'switch'}
+                </button>
+              </div>
+            );
+          })}
+          <div style={{ fontSize: 10, color: '#666', marginTop: 4 }}>
+            Switch dataset, edit the tree, then switch to another to set different data per option.
+          </div>
+        </>
+      )}
 
-      <div className={styles.label}>Edit Tree Data</div>
+      <div className={styles.label} style={{ marginTop: 8 }}>Bulk Edit</div>
       {editingTree ? (
         <>
           <textarea className={styles.textareaInput} rows={10} value={treeText}

@@ -59,6 +59,17 @@ function removeAtPath(nodes, path) {
   return clone;
 }
 
+function getNodeAtPath(nodes, path) {
+  if (!path || !nodes) return null;
+  const parts = path.split('.').map(Number);
+  let cur = nodes;
+  for (let i = 0; i < parts.length - 1; i++) {
+    if (!cur[parts[i]] || !cur[parts[i]].children) return null;
+    cur = cur[parts[i]].children;
+  }
+  return cur[parts[parts.length - 1]] || null;
+}
+
 function addChildAtPath(nodes, path) {
   const clone = JSON.parse(JSON.stringify(nodes));
   if (path === null) {
@@ -81,18 +92,30 @@ const INDENT = 18;
 const ROW_H = 24;
 
 function TreeViewWidget({ widget, onUpdate }) {
-  const nodes = widget.nodes || DEFAULT_NODES;
+  // Support dataSets: if activeDataSet is set and dataSets has it, use that
+  const dataSets = widget.dataSets;
+  const activeDataSet = widget.activeDataSet;
+  const nodes = (dataSets && activeDataSet && dataSets[activeDataSet]) || widget.nodes || DEFAULT_NODES;
   const columns = widget.columns || ['Name', 'Value', 'Type'];
   const showCheckboxes = !!widget.showCheckboxes;
   const selectedPath = widget.selectedPath;
+
+  // When dataSets are active, updating nodes must also sync the active dataSet
+  const updateNodes = useCallback((newNodes) => {
+    const patch = { nodes: newNodes };
+    if (dataSets && activeDataSet) {
+      patch.dataSets = { ...dataSets, [activeDataSet]: newNodes };
+    }
+    onUpdate(patch);
+  }, [dataSets, activeDataSet, onUpdate]);
 
   const visibleRows = flattenVisible(nodes);
   const hasExtra = columns.length > 1;
 
   const toggle = useCallback((path, e) => {
     e.stopPropagation();
-    onUpdate({ nodes: updateAtPath(nodes, path, (n) => ({ ...n, expanded: !n.expanded })) });
-  }, [nodes, onUpdate]);
+    updateNodes(updateAtPath(nodes, path, (n) => ({ ...n, expanded: !n.expanded })));
+  }, [nodes, updateNodes]);
 
   const select = useCallback((path, e) => {
     e.stopPropagation();
@@ -101,8 +124,8 @@ function TreeViewWidget({ widget, onUpdate }) {
 
   const check = useCallback((path, e) => {
     e.stopPropagation();
-    onUpdate({ nodes: updateAtPath(nodes, path, (n) => ({ ...n, checked: !n.checked })) });
-  }, [nodes, onUpdate]);
+    updateNodes(updateAtPath(nodes, path, (n) => ({ ...n, checked: !n.checked })));
+  }, [nodes, updateNodes]);
 
   return (
     <div
@@ -299,6 +322,6 @@ export function deserializeTree(text, columnCount) {
   return root;
 }
 
-export { addChildAtPath, removeAtPath, updateAtPath };
+export { addChildAtPath, removeAtPath, updateAtPath, getNodeAtPath };
 
 export default React.memo(TreeViewWidget);

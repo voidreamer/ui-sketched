@@ -17,13 +17,30 @@ export function canvasReducer(state, action) {
         widgets: [...state.widgets, action.widget],
       };
 
-    case 'UPDATE_WIDGET':
-      return {
-        ...state,
-        widgets: state.widgets.map((w) =>
-          w.id === action.id ? { ...w, ...action.patch } : w
-        ),
-      };
+    case 'UPDATE_WIDGET': {
+      let widgets = state.widgets.map((w) =>
+        w.id === action.id ? { ...w, ...action.patch } : w
+      );
+
+      // Handle widget linking: when a source widget with linkTo updates,
+      // cascade the change to the linked target widget
+      if (action.patch.text !== undefined) {
+        const source = widgets.find((w) => w.id === action.id);
+        if (source && source.linkTo) {
+          const selectedOption = action.patch.text;
+          widgets = widgets.map((w) => {
+            if (w.id !== source.linkTo) return w;
+            // combobox → treeview: switch active dataset
+            if (source.type === 'combobox' && w.type === 'treeview' && w.dataSets && w.dataSets[selectedOption]) {
+              return { ...w, activeDataSet: selectedOption, nodes: w.dataSets[selectedOption] };
+            }
+            return w;
+          });
+        }
+      }
+
+      return { ...state, widgets };
+    }
 
     case 'UPDATE_WIDGETS': {
       const updateMap = new Map(action.updates.map((u) => [u.id, u.patch]));
