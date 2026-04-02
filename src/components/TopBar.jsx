@@ -1,6 +1,8 @@
 import { useState, useRef, useEffect } from 'react';
 import { useCanvas } from '../state/CanvasContext';
 import { saveToS3, loadFromS3, listS3Sketches, downloadLocal, loadLocal } from '../utils/fileIO';
+import { exportToPNG, exportToSVG } from '../utils/exportImage';
+import { exportToDrawio } from '../utils/exportDrawio';
 import styles from './TopBar.module.css';
 
 function SaveMenu({ onClose }) {
@@ -102,6 +104,68 @@ function LoadMenu({ onClose }) {
   );
 }
 
+function ExportMenu({ onClose }) {
+  const { state } = useCanvas();
+  const [status, setStatus] = useState('');
+  const ref = useRef(null);
+
+  useEffect(() => {
+    const onClick = (e) => { if (ref.current && !ref.current.contains(e.target)) onClose(); };
+    document.addEventListener('mousedown', onClick);
+    return () => document.removeEventListener('mousedown', onClick);
+  }, [onClose]);
+
+  const handlePNG = async () => {
+    setStatus('Rendering...');
+    try {
+      await exportToPNG(state.widgets);
+      setStatus('Done!');
+      setTimeout(onClose, 600);
+    } catch (err) {
+      setStatus('Export failed');
+      console.error(err);
+    }
+  };
+
+  const handleSVG = () => {
+    try {
+      exportToSVG(state.widgets);
+      setStatus('Done!');
+      setTimeout(onClose, 600);
+    } catch (err) {
+      setStatus('Export failed');
+      console.error(err);
+    }
+  };
+
+  const handleDrawio = () => {
+    try {
+      exportToDrawio(state.widgets);
+      setStatus('Done!');
+      setTimeout(onClose, 600);
+    } catch (err) {
+      setStatus('Export failed');
+      console.error(err);
+    }
+  };
+
+  return (
+    <div className={styles.menu} ref={ref}>
+      <button className={styles.menuItem} onClick={handlePNG}>
+        Export as PNG
+      </button>
+      <button className={styles.menuItem} onClick={handleSVG}>
+        Export as SVG
+      </button>
+      <div className={styles.menuSep} />
+      <button className={styles.menuItem} onClick={handleDrawio}>
+        Export as draw.io
+      </button>
+      {status && <div className={styles.statusMsg}>{status}</div>}
+    </div>
+  );
+}
+
 export default function TopBar() {
   const { state, undo, redo, canUndo, canRedo } = useCanvas();
   const [openMenu, setOpenMenu] = useState(null);
@@ -133,6 +197,12 @@ export default function TopBar() {
           Load
         </button>
         {openMenu === 'load' && <LoadMenu onClose={() => setOpenMenu(null)} />}
+      </div>
+      <div className={styles.menuWrap}>
+        <button className={styles.btn} onClick={() => toggleMenu('export')} disabled={state.widgets.length === 0}>
+          Export
+        </button>
+        {openMenu === 'export' && <ExportMenu onClose={() => setOpenMenu(null)} />}
       </div>
       <span className={styles.separator}>|</span>
       <span className={styles.count}>
