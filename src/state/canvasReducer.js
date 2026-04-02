@@ -22,20 +22,61 @@ export function canvasReducer(state, action) {
         w.id === action.id ? { ...w, ...action.patch } : w
       );
 
-      // Handle widget linking: when a source widget with linkTo updates,
-      // cascade the change to the linked target widget
-      if (action.patch.text !== undefined) {
-        const source = widgets.find((w) => w.id === action.id);
-        if (source && source.linkTo) {
+      // Handle widget linking
+      const source = widgets.find((w) => w.id === action.id);
+      if (source && source.linkTo) {
+        // Combobox selection changed → switch linked treeview dataset
+        if (action.patch.text !== undefined && source.type === 'combobox') {
           const selectedOption = action.patch.text;
           widgets = widgets.map((w) => {
-            if (w.id !== source.linkTo) return w;
-            // combobox → treeview: switch active dataset
-            if (source.type === 'combobox' && w.type === 'treeview' && w.dataSets && w.dataSets[selectedOption]) {
-              return { ...w, activeDataSet: selectedOption, nodes: w.dataSets[selectedOption] };
+            if (w.id !== source.linkTo || w.type !== 'treeview') return w;
+            const dataSets = { ...(w.dataSets || {}) };
+            // Save current tree state to the current active dataset
+            if (w.activeDataSet) {
+              dataSets[w.activeDataSet] = w.nodes || [];
             }
-            return w;
+            // Auto-create dataset for the new option if it doesn't exist
+            if (!dataSets[selectedOption]) {
+              dataSets[selectedOption] = JSON.parse(JSON.stringify(w.nodes || []));
+            }
+            return {
+              ...w,
+              dataSets,
+              activeDataSet: selectedOption,
+              nodes: dataSets[selectedOption],
+            };
           });
+        }
+      }
+
+      // When a combobox establishes a new link, initialize dataSets on the target
+      if (action.patch.linkTo !== undefined) {
+        const src = widgets.find((w) => w.id === action.id);
+        if (src && src.type === 'combobox' && src.linkTo) {
+          widgets = widgets.map((w) => {
+            if (w.id !== src.linkTo || w.type !== 'treeview') return w;
+            if (w.dataSets && Object.keys(w.dataSets).length > 0) return w;
+            // Initialize a dataset for each combobox option
+            const dataSets = {};
+            const baseNodes = JSON.parse(JSON.stringify(w.nodes || []));
+            for (const opt of (src.options || [])) {
+              dataSets[opt] = JSON.parse(JSON.stringify(baseNodes));
+            }
+            // Set active to the combobox's current selection if it matches
+            const active = src.text && dataSets[src.text] ? src.text : null;
+            return { ...w, dataSets, activeDataSet: active };
+          });
+        }
+        // When unlinking, clear dataSets so the treeview goes back to normal
+        if (!action.patch.linkTo) {
+          // Find old linkTo before patch was applied
+          const oldWidget = state.widgets.find((w) => w.id === action.id);
+          if (oldWidget && oldWidget.linkTo && oldWidget.type === 'combobox') {
+            widgets = widgets.map((w) => {
+              if (w.id !== oldWidget.linkTo || w.type !== 'treeview') return w;
+              return { ...w, dataSets: null, activeDataSet: null };
+            });
+          }
         }
       }
 

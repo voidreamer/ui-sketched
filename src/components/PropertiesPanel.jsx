@@ -650,9 +650,21 @@ function TableProperties({ widget, update, handleOptionChange, handleRemoveOptio
 function TreeViewProperties({ widget, update, handleOptionChange, handleRemoveOption, handleAddOption, allWidgets }) {
   const [editingTree, setEditingTree] = useState(false);
   const [treeText, setTreeText] = useState('');
-  const nodes = widget.nodes || [];
   const columns = widget.columns || ['Name'];
+
+  // Resolve nodes the same way TreeViewWidget does
+  const nodes = (widget.dataSets && widget.activeDataSet && widget.dataSets[widget.activeDataSet])
+    || widget.nodes || [];
   const selectedNode = getNodeAtPath(nodes, widget.selectedPath);
+
+  // Helper: write nodes and keep dataSets in sync
+  const updateNodesSync = (newNodes) => {
+    const patch = { nodes: newNodes };
+    if (widget.dataSets && widget.activeDataSet) {
+      patch.dataSets = { ...widget.dataSets, [widget.activeDataSet]: newNodes };
+    }
+    update(widget.id, patch);
+  };
 
   const startEditTree = () => {
     setTreeText(serializeTree(nodes, columns));
@@ -661,14 +673,14 @@ function TreeViewProperties({ widget, update, handleOptionChange, handleRemoveOp
 
   const applyTree = () => {
     const newNodes = deserializeTree(treeText, columns.length - 1);
-    update(widget.id, { nodes: newNodes });
+    updateNodesSync(newNodes);
     setEditingTree(false);
   };
 
   const updateSelectedNode = (field, value) => {
     if (!widget.selectedPath) return;
     const newNodes = updateAtPath(nodes, widget.selectedPath, (n) => ({ ...n, [field]: value }));
-    update(widget.id, { nodes: newNodes });
+    updateNodesSync(newNodes);
   };
 
   const updateSelectedNodeValue = (colIndex, value) => {
@@ -679,7 +691,7 @@ function TreeViewProperties({ widget, update, handleOptionChange, handleRemoveOp
       vals[colIndex] = value;
       return { ...n, values: vals };
     });
-    update(widget.id, { nodes: newNodes });
+    updateNodesSync(newNodes);
   };
 
   // Check if any combobox is linked to this treeview
@@ -714,10 +726,17 @@ function TreeViewProperties({ widget, update, handleOptionChange, handleRemoveOp
             </div>
           ))}
           <div className={styles.row} style={{ marginTop: 4 }}>
-            <button className={styles.addBtn} onClick={() => update(widget.id, { nodes: addChildAtPath(nodes, widget.selectedPath) })}>
+            <button className={styles.addBtn} onClick={() => updateNodesSync(addChildAtPath(nodes, widget.selectedPath))}>
               + Child
             </button>
-            <button className={styles.removeBtn} onClick={() => update(widget.id, { nodes: removeAtPath(nodes, widget.selectedPath), selectedPath: null })}>
+            <button className={styles.removeBtn} onClick={() => {
+              const newNodes = removeAtPath(nodes, widget.selectedPath);
+              const patch = { nodes: newNodes, selectedPath: null };
+              if (widget.dataSets && widget.activeDataSet) {
+                patch.dataSets = { ...widget.dataSets, [widget.activeDataSet]: newNodes };
+              }
+              update(widget.id, patch);
+            }}>
               {'\u00D7'} Remove
             </button>
           </div>
@@ -729,7 +748,7 @@ function TreeViewProperties({ widget, update, handleOptionChange, handleRemoveOp
         </div>
       )}
 
-      <button className={styles.addBtn} onClick={() => update(widget.id, { nodes: addChildAtPath(nodes, null) })} style={{ marginTop: 4 }}>
+      <button className={styles.addBtn} onClick={() => updateNodesSync(addChildAtPath(nodes, null))} style={{ marginTop: 4 }}>
         + Add root node
       </button>
 
@@ -768,19 +787,18 @@ function TreeViewProperties({ widget, update, handleOptionChange, handleRemoveOp
             return (
               <div key={opt} className={styles.optionRow}>
                 <span style={{ flex: 1, fontSize: 11, color: isActive ? '#8ab4f8' : '#ccc' }}>
-                  {opt} {hasData ? '' : '(empty)'}
+                  {opt} {hasData ? '\u2713' : '(empty)'}
                 </span>
                 <button
                   className={styles.addBtn}
                   style={{ fontSize: 10, padding: '2px 6px' }}
                   onClick={() => {
-                    // Save current nodes as this dataset, then switch
                     const dataSets = { ...(widget.dataSets || {}) };
-                    // Save current state to the current active dataset
+                    // Save current resolved nodes to the current active dataset
                     if (widget.activeDataSet) {
                       dataSets[widget.activeDataSet] = nodes;
                     }
-                    // If this dataset doesn't exist yet, clone current nodes
+                    // Auto-create dataset if it doesn't exist (clone current)
                     if (!dataSets[opt]) {
                       dataSets[opt] = JSON.parse(JSON.stringify(nodes));
                     }
@@ -797,7 +815,7 @@ function TreeViewProperties({ widget, update, handleOptionChange, handleRemoveOp
             );
           })}
           <div style={{ fontSize: 10, color: '#666', marginTop: 4 }}>
-            Switch dataset, edit the tree, then switch to another to set different data per option.
+            Select an option in the combobox or click 'switch' to edit each dataset.
           </div>
         </>
       )}
